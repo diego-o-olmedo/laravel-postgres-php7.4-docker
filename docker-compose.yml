@@ -1,0 +1,59 @@
+version: '3.1'
+services:
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: app
+    restart: unless-stopped
+    tty: true
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - 8002:80
+    volumes:
+      - ./:/var/www
+      - ./nginx/conf.d:/etc/nginx/conf.d/
+    networks:
+      - app-network
+
+  postgres:
+    image: postgres:9.5-alpine
+    container_name: postgres
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=default
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=laravel
+    ports:
+      - "54321:5432"
+    networks:
+      - app-network
+  
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "admin@example.com"
+      PGADMIN_DEFAULT_PASSWORD: "Admin123!"
+    ports:
+      - 8081:80
+    networks:
+      - app-network
+
+volumes:
+  pg-data:
+
+networks:
+  app-network:
+    driver: bridge
